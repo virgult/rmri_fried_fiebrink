@@ -70,7 +70,6 @@ class DeepAutoEncoder:
     return self.model.layers[index].get_weights()
 
 
-
 class StackedAutoencoderTrain(object):
   """Stacked Autoencoder training class"""
 

@@ -2,12 +2,10 @@ import numpy as np
 import compress_pickle
 import os
 import sys
+sys.path.append(os.path.join(os.path.dirname(__file__)))
 
-print(os.getcwd())
-sys.path.append(os.path.join(".", "STL10"))
-
-from StackedAutoencoder import StackedAutoencoderTrain
-from STL10Loader import STL10Loader
+from StackedAutoencoder import *
+from STL10Loader import *
 
 
 def autoencoder_train(dataset="stl10_dataset.pickle.gz"):

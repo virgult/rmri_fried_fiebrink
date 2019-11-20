@@ -2,9 +2,9 @@ import numpy as np
 import compress_pickle
 import re
 
-#import os
-#import sys
-#sys.path.append(os.path.join("STL10"))
+import os
+import sys
+sys.path.append(os.path.join("STL10"))
 
 import stl10_input
 
