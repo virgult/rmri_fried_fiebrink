@@ -57,6 +57,12 @@ class DeepAutoEncoder:
     decoded = Dense(self.input_dim, activation='sigmoid')(decoded)
     return decoded
 
+  def compile(self, *args, **kwargs):
+    return self.model.compile(*args, **kwargs)
+
+  def fit(self, *args, **kwargs):
+    return self.model.fit(*args, **kwargs)
+
   def freeze_layer(self, index):
     self.model.layers[index].trainable = False;
     
@@ -141,3 +147,46 @@ class StackedAutoencoderTrain(object):
 
   def calculate_accuracy(self):
     raise NotImplementedError
+
+
+class DeepAutoencoderTrain(object):
+  """Deep Autoencoder training boilerplate"""
+
+  def train_autoencoder(self, num_units, x_train, y_train, x_test, y_test,
+                        n_epochs=50, learning_rate=1.):
+    """Creates and trains deep autoencoder"""
+    # Declare Deep AutoEncoder
+    self.num_layers = len(num_units)
+    self.training_epochs = 50
+    input_dim = x_train.shape[1]
+    deep_autoencoder = DeepAutoEncoder(n_layers=self.num_layers, 
+                                       units=num_units, 
+                                       input_dim=input_dim)
+    # Compile Model
+    deep_autoencoder.compile(optimizer='adam',
+                             loss='binary_crossentropy',
+                             metrics=['accuracy'])
+    # Train and save history
+    self.model_history = deep_autoencoder.fit(x_train,
+        x_train,
+        epochs=self.training_epochs,
+        batch_size=256,
+        shuffle=True,
+        validation_data=(x_test, x_test))
+
+  def plot_model_performance(self):
+    # Plot training & validation accuracy values
+    plt.plot(self.model_history.history['val_acc'])
+    plt.title('Model accuracy')
+    plt.ylabel('Accuracy')
+    plt.xlabel('Epoch')
+    plt.legend(['Train', 'Test'], loc='upper left')
+    plt.show()
+    # Plot training & validation loss values
+    plt.plot(self.model_history.history['loss'])
+    plt.plot(self.model_history.history['val_loss'])
+    plt.title('Model loss')
+    plt.ylabel('Loss')
+    plt.xlabel('Epoch')
+    plt.legend(['Train', 'Test'], loc='upper left')
+    plt.show()
