@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import os
+import datetime
 
 try:
   # Install the plaidml backend
@@ -175,6 +176,13 @@ class DeepAutoencoderTrain(object):
         validation_data=(x_test, x_test))
 
   def plot_model_performance(self):
+    now = datetime.datetime.now()
+    now_string = "%s%s%s_%s%s%s_" % (now.year,
+                                     now.month,
+                                     now.day,
+                                     now.hour,
+                                     now.minute,
+                                     now.second)
     # Plot training & validation accuracy values
     plt.plot(self.model_history.history['val_acc'])
     plt.title('Model accuracy')
@@ -182,6 +190,7 @@ class DeepAutoencoderTrain(object):
     plt.xlabel('Epoch')
     plt.legend(['Train', 'Test'], loc='upper left')
     plt.show()
+    plt.savefig("%s_accuracy.png" % now_string)
     # Plot training & validation loss values
     plt.plot(self.model_history.history['loss'])
     plt.plot(self.model_history.history['val_loss'])
@@ -190,3 +199,4 @@ class DeepAutoencoderTrain(object):
     plt.xlabel('Epoch')
     plt.legend(['Train', 'Test'], loc='upper left')
     plt.show()
+    plt.savefig("%s_loss.png" % now_string)
