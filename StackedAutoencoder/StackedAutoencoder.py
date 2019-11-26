@@ -11,14 +11,16 @@ except:
   # Install the tensorflow backend
   import tensorflow as tf
 
-from keras.datasets import mnist
-from keras.layers import Input, Dense
+
+from keras.layers import Input, Dense, Dense, Conv2D, Dropout, \
+  BatchNormalization, Input, Reshape, Flatten, Deconvolution2D, \
+  Conv2DTranspose, MaxPooling2D, UpSampling2D
 from keras.models import Model, Sequential, load_model
 from keras.utils.np_utils import to_categorical
 from keras.optimizers import Adadelta
 from keras import backend as K
 
-class DeepAutoEncoder:
+class DeepAutoEncoder(object):
   """Stacked Autoencoder Topology (generic)"""
 
   def __init__(self, n_layers, units, input_dim, activation='relu'):
@@ -26,15 +28,22 @@ class DeepAutoEncoder:
     self.set_units(units)
     self.activation = activation
     self.input_dim = input_dim
-    self.input = Input(shape=(self.input_dim,))
+    try:
+      # Convolutional case
+      iter(self.input_dim)
+      self.input = Input(shape=self.input_dim)
+    except TypeError:
+      # Other cases
+      self.input = Input(shape=(self.input_dim,))
     self.model = Model(self.input, self.decoder(self.encoder(self.input)))
 
   def set_units(self, units):
-    if isinstance(units, list):
+    try:
+      iter(units)
       if len(units) != self.n_layers:
          raise RuntimeError("List of units doesn't match the number of layers.")
       self.units = units
-    else:
+    except TypeError:
       self.units = [units] * self.n_layers
       
   def encoder(self, input):
@@ -158,22 +167,46 @@ class DeepAutoencoderTrain(object):
     """Creates and trains deep autoencoder"""
     # Declare Deep AutoEncoder
     self.num_layers = len(num_units)
-    self.training_epochs = 50
     input_dim = x_train.shape[1]
-    deep_autoencoder = DeepAutoEncoder(n_layers=self.num_layers, 
-                                       units=num_units, 
-                                       input_dim=input_dim)
+    self.deep_autoencoder = DeepAutoEncoder(n_layers=self.num_layers, 
+                                            units=num_units, 
+                                            input_dim=input_dim)
     # Compile Model
-    deep_autoencoder.compile(optimizer='adam',
+    self.deep_autoencoder.compile(optimizer='adam',
                              loss='binary_crossentropy',
                              metrics=['accuracy'])
     # Train and save history
-    self.model_history = deep_autoencoder.fit(x_train,
+    self.model_history = self.deep_autoencoder.fit(x_train,
         x_train,
-        epochs=self.training_epochs,
+        epochs=n_epochs,
         batch_size=256,
         shuffle=True,
         validation_data=(x_test, x_test))
+    self.x_train = x_train
+    self.x_test = x_test
+    self.y_train = y_train
+    self.y_test = y_test
+    self.num_units = num_units
+    self.input_dim = input_dim
+
+  def train_classifier(self, classes_vector, n_epochs=50):
+    """Creates and trains end classifier"""
+    self.n_classes = len(classes_vector)
+    self.classes_vector = classes_vector
+    self.y_train_encoded = to_categorical(self.y_train, self.n_classes)
+    self.y_test_encoded = to_categorical(self.y_test, self.n_classes)
+    # Freeze autoencoder layers
+    self.deep_autoencoder.freeze_layer(1)
+    self.deep_autoencoder.freeze_layer(2)
+    # Create classifier
+    classifier_output = Dense(self.n_classes, activation='softmax')(self.deep_autoencoder.encoder_layers[1])
+    self.classifier = Model(self.deep_autoencoder.input, classifier_output)
+    self.classifier.compile(optimizer='adadelta',loss='categorical_crossentropy',metrics=['accuracy'])
+    print("Learning rate: %s" % K.eval(self.classifier.optimizer.lr))
+    self.model_history = self.classifier.fit(self.x_train,self.y_train_encoded,
+                        validation_data=(self.x_test,self.y_test_encoded),
+                        epochs=n_epochs,
+                        batch_size=32)
 
   def plot_model_performance(self):
     now = datetime.datetime.now()
@@ -200,3 +233,28 @@ class DeepAutoencoderTrain(object):
     plt.legend(['Train', 'Test'], loc='upper left')
     plt.show()
     plt.savefig("%s_loss.png" % now_string)
+
+class Conv2DDeepAutoEncoderTrain(object):
+
+  def train_autoencoder(self, num_units, hidden_units, x_train, y_train, x_test, y_test,
+                        n_epochs=50):
+    #ENCODER
+    input_shape = x_train.shape[1:]
+    inp = Input(input_shape)
+    e = Conv2D(num_units[0], (3, 3), activation='relu')(inp)
+    e = MaxPooling2D((2, 2))(e)
+    e = Conv2D(num_units[1], (3, 3), activation='relu')(e)
+    e = MaxPooling2D((2, 2))(e)
+    e = Conv2D(num_units[2], (3, 3), activation='relu')(e)
+    l = Flatten()(e)
+    l = Dense(np.prod(hidden_units), activation='softmax')(l)
+    #DECODER
+    d = Reshape(hidden_units)(l)
+    d = Conv2DTranspose(num_units[2],(3, 3), strides=2, activation='relu', padding='same')(d)
+    d = BatchNormalization()(d)
+    d = Conv2DTranspose(num_units[1],(3, 3), strides=2, activation='relu', padding='same')(d)
+    d = BatchNormalization()(d)
+    d = Conv2DTranspose(num_units[0],(3, 3), activation='relu', padding='same')(d)
+    decoded = Conv2D(3, (3, 3), activation='sigmoid', padding='same')(d)
+    ae = Model(inp, decoded)
+    ae.summary()
