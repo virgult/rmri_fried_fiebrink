@@ -93,7 +93,7 @@ class DeepAutoEncoder(object):
     with open(model_json_filename, "w") as fh:
         fh.write(model_json)
     # serialize weights to HDF5
-    model.save_weights(weights_h5_filename)
+    self.model.save_weights(weights_h5_filename)
 
 
 class StackedAutoencoderTrain(object):
