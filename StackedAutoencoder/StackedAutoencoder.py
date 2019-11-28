@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 import datetime
+import time
 
 try:
   # Install the plaidml backend
@@ -54,6 +55,7 @@ class DeepAutoEncoder(object):
       for e in range(1, self.n_layers):
         encoded =  Dense(self.units[e], activation=self.activation)(encoded)
         self.encoder_layers.append(encoded)
+    self.encoded = encoded
     return encoded
   
   def decoder(self, encoded):
@@ -199,9 +201,11 @@ class DeepAutoencoderTrain(object):
     self.deep_autoencoder.freeze_layer(1)
     self.deep_autoencoder.freeze_layer(2)
     # Create classifier
-    classifier_output = Dense(self.n_classes, activation='softmax')(self.deep_autoencoder.encoder_layers[1])
+    classifier_output = Dense(self.n_classes, activation='softmax')(self.deep_autoencoder.encoded)
     self.classifier = Model(self.deep_autoencoder.input, classifier_output)
     self.classifier.compile(optimizer='adadelta',loss='categorical_crossentropy',metrics=['accuracy'])
+    self.classifier.summary()
+    time.sleep(3.)
     print("Learning rate: %s" % K.eval(self.classifier.optimizer.lr))
     self.model_history = self.classifier.fit(self.x_train,self.y_train_encoded,
                         validation_data=(self.x_test,self.y_test_encoded),
