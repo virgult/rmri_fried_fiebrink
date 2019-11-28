@@ -231,6 +231,7 @@ class DeepAutoencoderTrain(object):
     plt.show()
     plt.savefig("%s_accuracy.png" % now_string)
     # Plot training & validation loss values
+    plt.figure()
     plt.plot(self.model_history.history['loss'])
     plt.plot(self.model_history.history['val_loss'])
     plt.title('Model loss')
