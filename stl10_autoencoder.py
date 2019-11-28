@@ -38,9 +38,9 @@ def deep_autoencoder_train(dataset="stl10_dataset.pickle.gz"):
     # Create and train stacked autoencoders
     s = DeepAutoencoderTrain()
     print("Training autoencoder...")
-    s.train_autoencoder([256, 128, 64], x_train, y_train, x_test, y_test, n_epochs=50)
+    s.train_autoencoder([256, 64], x_train, y_train, x_test, y_test, n_epochs=20)
     print("Training classifier...")
-    s.train_classifier(stl10_dataset.class_names, n_epochs=100)
+    s.train_classifier(stl10_dataset.class_names, n_epochs=50)
     print("Done. Saving results...")
     s.plot_model_performance()
     s.save_model()
