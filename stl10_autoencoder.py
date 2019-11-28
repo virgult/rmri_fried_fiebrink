@@ -36,8 +36,9 @@ def deep_autoencoder_train(dataset="stl10_dataset.pickle.gz"):
     s.train_autoencoder([64, 16], x_train, y_train, x_test, y_test, n_epochs=5)
     print("Training classifier...")
     s.train_classifier(stl10_dataset.class_names, n_epochs=5)
-    print("Done.")
+    print("Done. Saving results...")
     s.plot_model_performance()
+    s.save_model()
     return s
 
 def conv_autoencoder_train(dataset="stl10_dataset.pickle.gz"):

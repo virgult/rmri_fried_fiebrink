@@ -133,3 +133,5 @@ dmypy.json
 venv*
 *.pickle*
 *.png
+*.json
+*.h5

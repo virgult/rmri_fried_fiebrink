@@ -87,6 +87,14 @@ class DeepAutoEncoder(object):
   def get_layer_weights(self, index):
     return self.model.layers[index].get_weights()
 
+  def save_model(self, model_json_filename, weights_h5_filename):
+    # serialize model to JSON
+    model_json = self.model.to_json()
+    with open(model_json_filename, "w") as fh:
+        fh.write(model_json)
+    # serialize weights to HDF5
+    model.save_weights(weights_h5_filename)
+
 
 class StackedAutoencoderTrain(object):
   """Stacked Autoencoder training class"""
@@ -198,8 +206,8 @@ class DeepAutoencoderTrain(object):
     self.y_train_encoded = to_categorical(self.y_train, self.n_classes)
     self.y_test_encoded = to_categorical(self.y_test, self.n_classes)
     # Freeze autoencoder layers
-    self.deep_autoencoder.freeze_layer(1)
-    self.deep_autoencoder.freeze_layer(2)
+    #self.deep_autoencoder.freeze_layer(1)
+    #self.deep_autoencoder.freeze_layer(2)
     # Create classifier
     classifier_output = Dense(self.n_classes, activation='softmax')(self.deep_autoencoder.encoded)
     self.classifier = Model(self.deep_autoencoder.input, classifier_output)
@@ -213,13 +221,7 @@ class DeepAutoencoderTrain(object):
                         batch_size=32)
 
   def plot_model_performance(self):
-    now = datetime.datetime.now()
-    now_string = "%s%s%s_%s%s%s_" % (now.year,
-                                     now.month,
-                                     now.day,
-                                     now.hour,
-                                     now.minute,
-                                     now.second)
+    now_string = self._get_now_string()
     # Plot training & validation accuracy values
     plt.plot(self.model_history.history['val_acc'])
     plt.title('Model accuracy')
@@ -237,6 +239,27 @@ class DeepAutoencoderTrain(object):
     plt.legend(['Train', 'Test'], loc='upper left')
     plt.show()
     plt.savefig("%s_loss.png" % now_string)
+
+  def _get_now_string(self):
+    try:
+      now_string = self.now_string
+    except AttributeError:
+      now = datetime.datetime.now()
+      now_string = "%s%s%s_%s%s%s" % (now.year,
+                                      now.month,
+                                      now.day,
+                                      now.hour,
+                                      now.minute,
+                                      now.second)
+      self.now_string = now_string
+    return now_string
+
+  def save_model(self):
+    now_string = self._get_now_string()
+    json_filename = "%s_model.json" % now_string()
+    h5_filename = "%s_weights.h5" % now_string()
+    self.deep_autoencoder.save_model(json_filename, h5_filename)
+
 
 class Conv2DDeepAutoEncoderTrain(object):
 
