@@ -2,6 +2,7 @@ import numpy as np
 import compress_pickle
 import os
 import sys
+import time
 
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 
@@ -30,6 +31,10 @@ def deep_autoencoder_train(dataset="stl10_dataset.pickle.gz"):
     stl10_dataset = compress_pickle.load(dataset)
     ((x_train, y_train), (x_test, y_test)) = stl10_dataset.data(flattened=True,
       category_filter=("airplane", "car", "cat", "dog"))
+    print("TRAIN/TEST SET DIMENSIONS")
+    print("Training set: %s" % y_train.shape[0])
+    print("Test set: %s" % y_test.shape[0])
+    time.sleep(3.)
     # Create and train stacked autoencoders
     s = DeepAutoencoderTrain()
     print("Training autoencoder...")

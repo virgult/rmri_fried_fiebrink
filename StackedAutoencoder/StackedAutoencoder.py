@@ -257,8 +257,8 @@ class DeepAutoencoderTrain(object):
 
   def save_model(self):
     now_string = self._get_now_string()
-    json_filename = "%s_model.json" % now_string()
-    h5_filename = "%s_weights.h5" % now_string()
+    json_filename = "%s_model.json" % now_string
+    h5_filename = "%s_weights.h5" % now_string
     self.deep_autoencoder.save_model(json_filename, h5_filename)
 
 
