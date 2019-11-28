@@ -28,7 +28,8 @@ def stacked_autoencoder_train(dataset="stl10_dataset.pickle.gz"):
 
 def deep_autoencoder_train(dataset="stl10_dataset.pickle.gz"):
     stl10_dataset = compress_pickle.load(dataset)
-    ((x_train, y_train), (x_test, y_test)) = stl10_dataset.data(flattened=True)
+    ((x_train, y_train), (x_test, y_test)) = stl10_dataset.data(flattened=True,
+      category_filter=("airplane", "car", "cat", "dog"))
     # Create and train stacked autoencoders
     s = DeepAutoencoderTrain()
     print("Training autoencoder...")
