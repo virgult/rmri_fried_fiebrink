@@ -29,8 +29,9 @@ def stacked_autoencoder_train(dataset="stl10_dataset.pickle.gz"):
 
 def deep_autoencoder_train(dataset="stl10_dataset.pickle.gz"):
     stl10_dataset = compress_pickle.load(dataset)
+    category_filter = ("airplane", "car", "cat", "dog")
     ((x_test, y_test), (x_train, y_train)) = stl10_dataset.data(flattened=True,
-      category_filter=("airplane", "car", "cat", "dog"))
+      category_filter=category_filter)
     print("TRAIN/TEST SET DIMENSIONS")
     print("Training set: %s" % y_train.shape[0])
     print("Test set: %s" % y_test.shape[0])
@@ -40,10 +41,11 @@ def deep_autoencoder_train(dataset="stl10_dataset.pickle.gz"):
     print("Training autoencoder...")
     s.train_autoencoder([256, 128, 64], x_train, y_train, x_test, y_test, n_epochs=50)
     print("Training classifier...")
-    s.train_classifier(stl10_dataset.class_names, n_epochs=100)
+    s.train_classifier(stl10_dataset.get_reduced_class_names(), n_epochs=100)
     print("Done. Saving results...")
     s.plot_model_performance()
     s.save_model()
+    s.dump_predicted_set(x_test, y_test)
     return s
 
 def conv_autoencoder_train(dataset="stl10_dataset.pickle.gz"):

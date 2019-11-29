@@ -47,6 +47,7 @@ class STL10Loader(object):
   def data(self, flattened=False, category_filter=None):
     """Extract data from the set"""
     if category_filter is not None:
+      self.category_filter = category_filter
       filtered_indexes_train = self._filter_by_categories(self.y_train, category_filter)
       filtered_indexes_test = self._filter_by_categories(self.y_test, category_filter)
       x_train_local = self.x_train[filtered_indexes_train]
@@ -75,6 +76,12 @@ class STL10Loader(object):
     y_reduced = [n[0] for n in enumerate(y_uniquelist)]
     reduction_dict = {n[0]: n[1] for n in zip(y_uniquelist, y_reduced)}
     return np.array([reduction_dict[n] for n in y])
+
+  def get_reduced_class_names(self):
+    try:
+      return tuple(filter(self.class_names, lambda n: n in self.category_filter))
+    except AttributeError:
+      return self.class_names
 
 if __name__ == "__main__":
   stl10_loader = STL10Loader()

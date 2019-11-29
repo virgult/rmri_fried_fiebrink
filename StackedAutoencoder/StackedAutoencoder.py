@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import os
 import datetime
 import time
+import compress_pickle
 
 try:
   # Install the plaidml backend
@@ -95,6 +96,14 @@ class DeepAutoEncoder(object):
     # serialize weights to HDF5
     self.model.save_weights(weights_h5_filename)
 
+  def predict_encoded(self, x_set):
+    predict_model = Sequential(self.encoder_layers)
+    predict_model.compile(optimizer="adadelta")
+    # Prevent training
+    for n in range(predict_model.layers):
+      predict_model.layers[n].trainable = False
+    # Predict all Y's at once
+    return np.array([predict_model.predict(x) for x in x_set])
 
 class StackedAutoencoderTrain(object):
   """Stacked Autoencoder training class"""
@@ -261,6 +270,17 @@ class DeepAutoencoderTrain(object):
     h5_filename = "%s_weights.h5" % now_string
     self.deep_autoencoder.save_model(json_filename, h5_filename)
 
+  def dump_predicted_set(self, x_set, y_set):
+    x_set_enc = self.deep_autoencoder.predict_encoded(x_set)
+    dump = {
+      "categories": self.classes_vector,
+      "x" : x_set,
+      "x_encoded": x_set_enc,
+      "y" : y_set
+    }
+    now_string = self._get_now_string()
+    dump_filename = "%s_encoded.gz" % now_string
+    compress_pickle.dump(dump, dump_filename)
 
 class Conv2DDeepAutoEncoderTrain(object):
 
