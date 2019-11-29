@@ -198,9 +198,10 @@ class DeepAutoencoderTrain(object):
     self.model_history = self.deep_autoencoder.fit(x_train,
         x_train,
         epochs=n_epochs,
-        batch_size=256,
+        batch_size=32,
         shuffle=True,
-        validation_data=(x_test, x_test))
+        #validation_data=(x_test, x_test))
+        validation_split=0.1)
     self.x_train = x_train
     self.x_test = x_test
     self.y_train = y_train
@@ -225,7 +226,8 @@ class DeepAutoencoderTrain(object):
     time.sleep(3.)
     print("Learning rate: %s" % K.eval(self.classifier.optimizer.lr))
     self.model_history = self.classifier.fit(self.x_train,self.y_train_encoded,
-                        validation_data=(self.x_test,self.y_test_encoded),
+                        #validation_data=(self.x_test,self.y_test_encoded),
+                        validation_split=0.1,
                         epochs=n_epochs,
                         batch_size=32)
 
