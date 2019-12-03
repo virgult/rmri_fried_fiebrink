@@ -4,7 +4,7 @@ import re
 
 import os
 import sys
-sys.path.append(os.path.join("STL10"))
+sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 
 import stl10_input
 
