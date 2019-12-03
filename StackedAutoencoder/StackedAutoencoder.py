@@ -107,84 +107,11 @@ class DeepAutoEncoder(object):
     # Predict all Y's at once
     return predict_model.predict(x_set)
 
-class StackedAutoencoderTrain(object):
-  """Stacked Autoencoder training class"""
-
-  def train_first_layer(self, num_units, x_train, y_train, x_test, y_test,
-                        n_epochs=50, learning_rate=1.):
-    """Creates and trains first layer"""
-    input_dim = x_train.shape[1]
-    # Create 1st Autoencoder
-    self.autoencoder_1 = DeepAutoEncoder(n_layers=1, 
-                                         units=num_units, 
-                                         input_dim=input_dim)
-    # Optimiser
-    optimiser = Adadelta(lr=learning_rate)
-    # Compile Model
-    self.autoencoder_1.model.compile(optimizer=optimiser, loss='binary_crossentropy')
-    print("Learning rate: %s" % K.eval(self.autoencoder_1.model.optimizer.lr))
-    self.autoencoder_1.model.fit(x_train, x_train,
-                                 epochs=n_epochs,
-                                 batch_size=256,
-                                 shuffle=True,
-                                 validation_data=(x_test, x_test))
-    self.x_train = x_train
-    self.x_test = x_test
-    self.y_train = y_train
-    self.y_test = y_test
-    self.num_units = num_units
-    self.input_dim = input_dim
-    
-  def train_second_layer(self, n_units_2, n_epochs=50):
-    """Creates and trains inner layer"""
-    self.num_units_2 = n_units_2
-    self.autoencoder_2 = DeepAutoEncoder(n_layers=2, 
-                                         units=[self.num_units, self.num_units_2], 
-                                         input_dim=self.input_dim)
-    # Set weights of 1st layer
-    self.autoencoder_2.set_layer_weights(1, self.autoencoder_1.model.layers[1].get_weights())
-    # Freeze 1st layer
-    self.autoencoder_2.freeze_layer(1)
-    # Compile model
-    self.autoencoder_2.model.compile(optimizer='adadelta', loss='binary_crossentropy')
-    print("Learning rate: %s" % K.eval(self.autoencoder_2.model.optimizer.lr))
-    # Train on data
-    self.autoencoder_2.model.fit(self.x_train, self.x_train,
-                                 epochs=n_epochs,
-                                 batch_size=256,
-                                 shuffle=True,
-                                 validation_data=(self.x_test, self.x_test))
-    # Freeze 2nd layer
-    self.autoencoder_2.freeze_layer(2)
-
-  def train_classifier(self, classes_vector, n_epochs=50):
-    """Creates and trains end classifier"""
-    self.n_classes = len(classes_vector)
-    self.classes_vector = classes_vector
-    self.y_train_encoded = to_categorical(self.y_train, self.n_classes)
-    self.y_test_encoded = to_categorical(self.y_test, self.n_classes)
-    # Create classifier
-    classifier_output = Dense(self.n_classes, activation='softmax')(self.autoencoder_2.encoder_layers[1])
-    self.classifier = Model(self.autoencoder_2.input,classifier_output)
-    self.classifier.compile(optimizer='adadelta',loss='categorical_crossentropy',metrics=['accuracy'])
-    print("Learning rate: %s" % K.eval(self.classifier.optimizer.lr))
-    self.classifier.fit(self.x_train,self.y_train_encoded,
-                        validation_data=(self.x_test,self.y_test_encoded),
-                        epochs=n_epochs,
-                        batch_size=32)
-  
-  def predict(self, example):
-    raise NotImplementedError
-
-  def calculate_accuracy(self):
-    raise NotImplementedError
-
-
 class DeepAutoencoderTrain(object):
   """Deep Autoencoder training boilerplate"""
 
   def train_autoencoder(self, num_units, x_train, y_train, x_test, y_test,
-                        n_epochs=50, learning_rate=1., batch_size=96):
+                        n_epochs=50, learning_rate=1., batch_size=32):
     """Creates and trains deep autoencoder"""
     # Declare Deep AutoEncoder
     self.num_layers = len(num_units)
@@ -200,7 +127,7 @@ class DeepAutoencoderTrain(object):
     self.model_history = self.deep_autoencoder.fit(x_train,
         x_train,
         epochs=n_epochs,
-        batch_size=96,
+        batch_size=batch_size,
         shuffle=True,
         #validation_data=(x_test, x_test))
         validation_split=0.1)
@@ -211,7 +138,7 @@ class DeepAutoencoderTrain(object):
     self.num_units = num_units
     self.input_dim = input_dim
 
-  def train_classifier(self, classes_vector, n_epochs=50, batch_size=96):
+  def train_classifier(self, classes_vector, n_epochs=50, batch_size=32):
     """Creates and trains end classifier"""
     self.n_classes = len(classes_vector)
     self.classes_vector = classes_vector
@@ -231,7 +158,7 @@ class DeepAutoencoderTrain(object):
                         #validation_data=(self.x_test,self.y_test_encoded),
                         validation_split=0.1,
                         epochs=n_epochs,
-                        batch_size=96)
+                        batch_size=batch_size)
     loss, acc = self.classifier.evaluate(self.x_test, self.y_test_encoded, batch_size=32)
     print("Trained classifier:\nLOSS: %s\nACCURACY:%s" % (loss, acc))
 
@@ -288,27 +215,3 @@ class DeepAutoencoderTrain(object):
     dump_filename = "%s_encoded.gz" % now_string
     compress_pickle.dump(dump, dump_filename)
 
-class Conv2DDeepAutoEncoderTrain(object):
-
-  def train_autoencoder(self, num_units, hidden_units, x_train, y_train, x_test, y_test,
-                        n_epochs=50):
-    #ENCODER
-    input_shape = x_train.shape[1:]
-    inp = Input(input_shape)
-    e = Conv2D(num_units[0], (3, 3), activation='relu')(inp)
-    e = MaxPooling2D((2, 2))(e)
-    e = Conv2D(num_units[1], (3, 3), activation='relu')(e)
-    e = MaxPooling2D((2, 2))(e)
-    e = Conv2D(num_units[2], (3, 3), activation='relu')(e)
-    l = Flatten()(e)
-    l = Dense(np.prod(hidden_units), activation='softmax')(l)
-    #DECODER
-    d = Reshape(hidden_units)(l)
-    d = Conv2DTranspose(num_units[2],(3, 3), strides=2, activation='relu', padding='same')(d)
-    d = BatchNormalization()(d)
-    d = Conv2DTranspose(num_units[1],(3, 3), strides=2, activation='relu', padding='same')(d)
-    d = BatchNormalization()(d)
-    d = Conv2DTranspose(num_units[0],(3, 3), activation='relu', padding='same')(d)
-    decoded = Conv2D(3, (3, 3), activation='sigmoid', padding='same')(d)
-    ae = Model(inp, decoded)
-    ae.summary()
