@@ -150,7 +150,7 @@ class DeepAutoencoderTrain(object):
     # Freeze autoencoder layers
     #for n in range(1, self.num_layers+1):
     #  self.classifier.layers[n].trainable = False
-    self.classifier.compile(optimizer='adadelta',loss='categorical_crossentropy',metrics=['accuracy'])
+    self.classifier.compile(optimizer='adam',loss='categorical_crossentropy',metrics=['accuracy'])
     self.classifier.summary()
     time.sleep(3.)
     print("Learning rate: %s" % K.eval(self.classifier.optimizer.lr))
