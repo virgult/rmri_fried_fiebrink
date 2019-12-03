@@ -4,7 +4,7 @@ import re
 
 import os
 import sys
-sys.path.append(os.path.join("STL10"))
+sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 
 import stl10_input
 
@@ -44,14 +44,44 @@ class STL10Loader(object):
     x *= 1./255.
     return x.astype(np.float32)
 
-  def data(self, flattened=False):
+  def data(self, flattened=False, category_filter=None):
     """Extract data from the set"""
+    if category_filter is not None:
+      self.category_filter = category_filter
+      filtered_indexes_train = self._filter_by_categories(self.y_train, category_filter)
+      filtered_indexes_test = self._filter_by_categories(self.y_test, category_filter)
+      x_train_local = self.x_train[filtered_indexes_train]
+      y_train_local = self._reduce_filtered_y(self.y_train[filtered_indexes_train])
+      x_test_local = self.x_test[filtered_indexes_test]
+      y_test_local = self._reduce_filtered_y(self.y_test[filtered_indexes_test])
+    else:
+      x_train_local = self.x_train
+      y_train_local = self.y_train
+      x_test_local = self.x_test
+      y_test_local = self.y_test
     if flattened:
-      return ((self._flatten_images(self.x_train),
-               self.y_train),
-              (self._flatten_images(self.x_test),
-               self.y_test))
-    return ((self.x_train, self.y_train), (self.x_test, self.y_test))
+      return ((self._flatten_images(x_train_local),
+               y_train_local),
+              (self._flatten_images(x_test_local),
+               y_test_local))
+    return ((x_train_local, y_train_local), (x_test_local, y_test_local))
+
+  def _filter_by_categories(self, y, category_filter):
+    """Returns indexes of filtered examples by categories given"""
+    reduced_categories = [self.class_names.index(n) for n in category_filter]
+    return np.where([n in reduced_categories for n in y])[0]
+
+  def _reduce_filtered_y(self, y):
+    y_uniquelist = list(set(y))
+    y_reduced = [n[0] for n in enumerate(y_uniquelist)]
+    reduction_dict = {n[0]: n[1] for n in zip(y_uniquelist, y_reduced)}
+    return np.array([reduction_dict[n] for n in y])
+
+  def get_reduced_class_names(self):
+    try:
+      return tuple(filter(lambda n: n in self.category_filter, self.class_names))
+    except AttributeError:
+      return self.class_names
 
 if __name__ == "__main__":
   stl10_loader = STL10Loader()
