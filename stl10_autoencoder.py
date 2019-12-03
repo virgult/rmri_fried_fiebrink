@@ -29,6 +29,7 @@ def stacked_autoencoder_train(dataset="stl10_dataset.pickle.gz"):
 
 def deep_autoencoder_train(dataset="stl10_dataset.pickle.gz",
                            layer_dims=[256, 64],
+                           batch_size=96,
                            autoencoder_epochs=5,
                            classifier_epochs=5):
     stl10_dataset = compress_pickle.load(dataset)
@@ -42,9 +43,21 @@ def deep_autoencoder_train(dataset="stl10_dataset.pickle.gz",
     # Create and train stacked autoencoders
     s = DeepAutoencoderTrain()
     print("Training autoencoder...")
-    s.train_autoencoder(layer_dims, x_train, y_train, x_test, y_test, n_epochs=autoencoder_epochs)
+    try:
+        auto_batch_size = batch_size[1]
+    except TypeError:
+        auto_batch_size = batch_size
+    s.train_autoencoder(layer_dims, x_train, y_train, x_test, y_test,
+                        batch_size=auto_batch_size,
+                        n_epochs=autoencoder_epochs)
     print("Training classifier...")
-    s.train_classifier(stl10_dataset.get_reduced_class_names(), n_epochs=classifier_epochs)
+    try:
+        classif_batch_size = batch_size[0]
+    except TypeError:
+        classif_batch_size = batch_size
+    s.train_classifier(stl10_dataset.get_reduced_class_names(),
+                       batch_size=classif_batch_size,
+                       n_epochs=classifier_epochs)
     print("Plotting results...")
     s.plot_model_performance()
     print("Predicting encoded examples...")
@@ -62,4 +75,4 @@ def conv_autoencoder_train(dataset="stl10_dataset.pickle.gz"):
     
 
 if __name__ == "__main__":
-    deep_autoencoder_train(dataset="stl10_dataset.pickle.gz", autoencoder_epochs=20, classifier_epochs=25)
+    deep_autoencoder_train(dataset="stl10_dataset.pickle.gz", autoencoder_epochs=20, classifier_epochs=25, batch_size=96)
