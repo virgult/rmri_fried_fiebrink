@@ -1,9 +1,9 @@
 import numpy as np
-from StackedAutoencoder import 
+from StackedAutoencoder import StackedAutoencoder
 
 
-features = np.load("./flatten_mfcc.npy")
-labels = np.load("./one_hot_labels.npy")
+features = np.load("./data/flatten_mfcc.npy")
+labels = np.load("./data/one_hot_labels.npy")
 
 training_split = 0.5
 
@@ -35,7 +35,7 @@ training_epochs = 20
 batch_size = 32
 
 # Declare Deep AutoEncoder
-deep_autoencoder = AutoEncoder(n_layers=num_layers,
+deep_autoencoder = StackedAutoencoder.DeepAutoEncoder(n_layers=num_layers,
                                 units=units,
                                 input_dim=input_dim)
 # Compile Model
