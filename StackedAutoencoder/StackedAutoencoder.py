@@ -38,6 +38,7 @@ class DeepAutoEncoder(object):
       # Other cases
       self.input = Input(shape=(self.input_dim,))
     self.model = Model(self.input, self.decoder(self.encoder(self.input)))
+    self.encoder_model = Model(self.input, self.encoded)
 
   def set_units(self, units):
     try:

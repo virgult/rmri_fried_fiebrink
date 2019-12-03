@@ -1,4 +1,6 @@
 import numpy as np
+from keras.models import Model
+from keras.layers import Dense
 from StackedAutoencoder import StackedAutoencoder
 
 
@@ -43,3 +45,26 @@ deep_autoencoder.model.compile(optimizer='adam', loss='categorical_crossentropy'
 deep_autoencoder.model.summary()
 deep_autoencoder.encoder_model.summary()
 
+# Train Deep AutoEncoder
+deep_autoencoder_history = deep_autoencoder.model.fit(train_input, train_input,
+                epochs=training_epochs,
+                batch_size=batch_size,
+                shuffle=True,
+                validation_split=0.1)
+
+n_classes = 10
+classifier_output = Dense(n_classes,activation='softmax')(deep_autoencoder.encoded)
+classifier = Model(deep_autoencoder.input,classifier_output)
+classifier.summary()
+for i,layer in enumerate(classifier.layers):
+    print(i,layer.name,layer.trainable)
+
+classifier.compile(optimizer='adam',loss='categorical_crossentropy',metrics=['accuracy'])
+
+classifier.fit(train_input, train_labels, epochs=30, batch_size=batch_size,
+          validation_split=0.2)
+
+loss, acc = classifier.evaluate(test_input, test_labels, batch_size=batch_size)
+
+print("Done!")
+print("Loss: %.4f, accuracy: %.4f" % (loss, acc))
