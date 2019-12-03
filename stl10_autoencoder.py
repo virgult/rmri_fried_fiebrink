@@ -62,5 +62,4 @@ def conv_autoencoder_train(dataset="stl10_dataset.pickle.gz"):
     
 
 if __name__ == "__main__":
-    deep_autoencoder_train(dataset="stl10_dataset.pickle.gz")
-
+    deep_autoencoder_train(dataset="stl10_dataset.pickle.gz", autoencoder_epochs=20, classifier_epochs=25)

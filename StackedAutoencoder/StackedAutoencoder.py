@@ -232,7 +232,7 @@ class DeepAutoencoderTrain(object):
                         validation_split=0.1,
                         epochs=n_epochs,
                         batch_size=32)
-    loss, acc = self.classifier.evaluate(self.x_train, self.y_test_encoded, batch_size=32)
+    loss, acc = self.classifier.evaluate(self.x_test, self.y_test_encoded, batch_size=32)
     print("Trained classifier:\nLOSS: %s\nACCURACY:%s" % (loss, acc))
 
   def plot_model_performance(self):
