@@ -97,13 +97,15 @@ class DeepAutoEncoder(object):
     self.model.save_weights(weights_h5_filename)
 
   def predict_encoded(self, x_set):
-    predict_model = Sequential(self.encoder_layers)
-    predict_model.compile(optimizer="adadelta")
+    predict_model = Sequential(self.model.layers[:len(self.model.layers)//2+1])
+    predict_model.compile(optimizer="adadelta",
+                          loss='categorical_crossentropy',
+                          metrics=['accuracy'])
     # Prevent training
-    for n in range(predict_model.layers):
+    for n in range(len(predict_model.layers)):
       predict_model.layers[n].trainable = False
     # Predict all Y's at once
-    return np.array([predict_model.predict(x) for x in x_set])
+    return predict_model.predict(x_set)
 
 class StackedAutoencoderTrain(object):
   """Stacked Autoencoder training class"""

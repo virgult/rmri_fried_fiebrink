@@ -79,7 +79,7 @@ class STL10Loader(object):
 
   def get_reduced_class_names(self):
     try:
-      return tuple(filter(self.class_names, lambda n: n in self.category_filter))
+      return tuple(filter(lambda n: n in self.category_filter, self.class_names))
     except AttributeError:
       return self.class_names
 
