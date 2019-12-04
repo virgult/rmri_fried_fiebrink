@@ -14,7 +14,7 @@ class FMsynth(object):
     # k_th harmonic = N1 + n*N2 for n = 0,1,2,3,4,...
     # so for f_carrier = 100 and f_mod = 300, harmonics are [100, 400, 700, 1000, 1300, 1600, 1900, 2200, 2500, 2800] etc
     """
-    def __init__(self, f_carrier = 220, f_mod =220, Ind_mod = 1, length = 5, sampleRate = 44100.0, waveFile = False, ramp = False):
+    def __init__(self, f_carrier = 220, f_mod = 220, f_am = 0, Ind_mod = 1, length = 5, sampleRate = 44100.0, waveFile = False, ramp = False):
         self.increment = .01
         self.f_carrier = f_carrier
         self.f_mod = f_mod
@@ -27,9 +27,9 @@ class FMsynth(object):
         if ramp:
             ramp = [Ind_mod*rmp/length for rmp in x]
             ramp = ramp[::-1]
-            y = np.sin(2*np.pi*self.f_carrier*x + ramp*np.sin(2*np.pi*self.f_mod*x))
+            y = np.sin(2*np.pi*f_am*x) * np.sin(2*np.pi*self.f_carrier*x + ramp*np.sin(2*np.pi*self.f_mod*x))
         else:
-            y = np.sin(2*np.pi*self.f_carrier*x + self.Ind_mod*np.sin(2*np.pi*self.f_mod*x))
+            y = np.sin(2*np.pi*f_am*x) * np.sin(2*np.pi*self.f_carrier*x + self.Ind_mod*np.sin(2*np.pi*self.f_mod*x))
         mx = 1.059*(max(abs(y))) # scale to max pk of -.5 dB
         y = y/mx
         wavData = np.asarray(32000*y, dtype = np.int16)
