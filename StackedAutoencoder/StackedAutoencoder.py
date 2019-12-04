@@ -139,12 +139,16 @@ class DeepAutoencoderTrain(object):
     self.num_units = num_units
     self.input_dim = input_dim
 
-  def train_classifier(self, classes_vector, n_epochs=50, batch_size=32):
+  def train_classifier(self, classes_vector, n_epochs=50, batch_size=32, encoded=False):
     """Creates and trains end classifier"""
     self.n_classes = len(classes_vector)
     self.classes_vector = classes_vector
-    self.y_train_encoded = to_categorical(self.y_train, self.n_classes)
-    self.y_test_encoded = to_categorical(self.y_test, self.n_classes)
+    if not encoded:
+        self.y_train_encoded = to_categorical(self.y_train, self.n_classes)
+        self.y_test_encoded = to_categorical(self.y_test, self.n_classes)
+    else:
+        self.y_train_encoded = self.y_train
+        self.y_test_encoded = self.y_test
     # Create classifier
     classifier_output = Dense(self.n_classes, activation='softmax')(self.deep_autoencoder.encoded)
     self.classifier = Model(self.deep_autoencoder.input, classifier_output)
