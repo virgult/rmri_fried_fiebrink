@@ -112,7 +112,8 @@ class DeepAutoencoderTrain(object):
   """Deep Autoencoder training boilerplate"""
 
   def train_autoencoder(self, num_units, x_train, y_train, x_test, y_test,
-                        n_epochs=50, learning_rate=1., batch_size=32):
+                        n_epochs=50, learning_rate=1., batch_size=32,
+                        optimizer='adam', loss_function='binary_crossentropy'):
     """Creates and trains deep autoencoder"""
     # Declare Deep AutoEncoder
     self.num_layers = len(num_units)
@@ -121,8 +122,8 @@ class DeepAutoencoderTrain(object):
                                             units=num_units, 
                                             input_dim=input_dim)
     # Compile Model
-    self.deep_autoencoder.compile(optimizer='adam',
-                             loss='binary_crossentropy',
+    self.deep_autoencoder.compile(optimizer=optimizer,
+                             loss=loss_function,
                              metrics=['accuracy'])
     # Train and save history
     self.model_history = self.deep_autoencoder.fit(x_train,
@@ -139,19 +140,24 @@ class DeepAutoencoderTrain(object):
     self.num_units = num_units
     self.input_dim = input_dim
 
-  def train_classifier(self, classes_vector, n_epochs=50, batch_size=32):
+  def train_classifier(self, classes_vector, n_epochs=50, batch_size=32, encoded=False,
+                        optimizer='adam', loss_function='binary_crossentropy'):
     """Creates and trains end classifier"""
     self.n_classes = len(classes_vector)
     self.classes_vector = classes_vector
-    self.y_train_encoded = to_categorical(self.y_train, self.n_classes)
-    self.y_test_encoded = to_categorical(self.y_test, self.n_classes)
+    if not encoded:
+        self.y_train_encoded = to_categorical(self.y_train, self.n_classes)
+        self.y_test_encoded = to_categorical(self.y_test, self.n_classes)
+    else:
+        self.y_train_encoded = self.y_train
+        self.y_test_encoded = self.y_test
     # Create classifier
     classifier_output = Dense(self.n_classes, activation='softmax')(self.deep_autoencoder.encoded)
     self.classifier = Model(self.deep_autoencoder.input, classifier_output)
     # Freeze autoencoder layers
     #for n in range(1, self.num_layers+1):
     #  self.classifier.layers[n].trainable = False
-    self.classifier.compile(optimizer='adam',loss='categorical_crossentropy',metrics=['accuracy'])
+    self.classifier.compile(optimizer=optimizer,loss=loss_function,metrics=['accuracy'])
     self.classifier.summary()
     time.sleep(3.)
     print("Learning rate: %s" % K.eval(self.classifier.optimizer.lr))
